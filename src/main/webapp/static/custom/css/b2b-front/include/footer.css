@@ -1,0 +1,27 @@
+@charset "utf-8";
+
+footer {
+	background-color: #414141;
+	color: white;
+	padding: 1.5em;
+}
+
+footer>hr {
+	margin-top: 1em;
+	margin-bottom: 1em;
+	border-top: 1px solid #777;
+}
+
+.footer-div a {
+	color: white;
+	margin-left: 1em;
+	margin-right: 1em;
+}
+
+.footer-copyright {
+	text-align: center;
+}
+
+.footer-copyright .row {
+	line-height: 2em;
+}

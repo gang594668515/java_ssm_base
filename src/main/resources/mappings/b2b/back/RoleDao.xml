@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xj.b2b.back.dao.RoleDao">
+
+	<resultMap id="roleResult" type="Role">
+		<id property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="enname" column="enname" />
+		<result property="roleType" column="roleType" />
+		<result property="datascope" column="datascope" />
+		<result property="remarks" column="remarks" />
+		<result property="useable" column="useable" />
+		<result property="sysData" column="sysData" />
+		<collection property="menuList" ofType="Menu">
+			<id property="id" column="menuList.id" />
+		</collection>
+	</resultMap>
+
+	<sql id="roleColumns">
+		a.id,
+		a.name,
+		a.enname,
+		a.role_type as roleType,
+		a.is_sys as sysData,
+		a.useable as useable,
+		a.create_by as "createBy.id",
+		a.create_date,
+		a.update_by as "updateBy.id",
+		a.update_date,
+		a.remarks,
+		a.del_flag as delFlag
+	</sql>
+
+	<select id="get" resultMap="roleResult">
+		SELECT
+		<include refid="roleColumns" />
+		,
+		rm.menu_id as "menuList.id"
+		FROM sys_role a
+		LEFT OUTER JOIN sys_role_menu rm ON rm.role_id = a.id
+		WHERE a.id = #{id}
+	</select>
+
+	<select id="getByName" resultType="Role">
+		SELECT
+		<include refid="roleColumns" />
+		FROM sys_role a
+		WHERE a.name = #{name} AND a.del_flag = #{DEL_FLAG_NORMAL}
+	</select>
+
+	<select id="getByEnname" resultType="Role">
+		SELECT
+		<include refid="roleColumns" />
+		FROM sys_role a
+		WHERE a.enname = #{enname} AND a.del_flag = #{DEL_FLAG_NORMAL}
+	</select>
+
+	<!-- Activiti用 -->
+	<select id="findList" resultMap="roleResult">
+		SELECT <!-- DISTINCT -->
+		<include refid="roleColumns" />
+		FROM sys_role a
+		LEFT JOIN sys_user_role ur ON ur.role_id = a.id
+		LEFT JOIN sys_user u ON u.id = ur.user_id
+		WHERE
+		a.del_flag = #{DEL_FLAG_NORMAL} AND a.useable=#{useable}
+		<if test="user != null and user.id != null and user.id != ''">
+			AND u.id = #{user.id}
+		</if>
+		<if test="user != null and user.loginName != null and user.loginName != ''">
+			AND u.login_name = #{user.loginName}
+		</if>
+		ORDER BY a.name
+	</select>
+
+	<select id="findAllList" resultType="Role">
+		SELECT
+		<include refid="roleColumns" />
+		FROM sys_role a
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+		<if test="roleType != null and roleType != ''">
+			AND a.role_type = #{roleType}
+		</if>
+		ORDER BY a.name
+	</select>
+
+	<insert id="insert">
+		<selectKey resultType="java.lang.String" order="BEFORE" keyProperty="id">
+			select to_char(sq_sys_role_id.nextval)
+			from dual
+		</selectKey>
+		INSERT INTO sys_role(
+		id,
+		name,
+		enname,
+		role_type,
+		is_sys,
+		useable,
+		create_by,
+		create_date,
+		update_by,
+		update_date,
+		remarks,
+		del_flag
+		) VALUES (
+		#{id},
+		#{name},
+		#{enname},
+		#{roleType},
+		#{sysData},
+		#{useable},
+		#{createBy.id},
+		#{createDate},
+		#{updateBy.id},
+		#{updateDate},
+		#{remarks},
+		#{delFlag}
+		)
+	</insert>
+
+	<update id="update">
+		UPDATE sys_role SET
+		name = #{name},
+		role_type = #{roleType},
+		is_sys = #{sysData},
+		useable = #{useable},
+		update_by = #{updateBy.id},
+		update_date = #{updateDate},
+		remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+
+	<delete id="deleteRoleMenu">
+		DELETE FROM sys_role_menu WHERE role_id = #{id}
+	</delete>
+
+	<insert id="insertRoleMenu">
+		INSERT INTO sys_role_menu(role_id, menu_id)
+		<foreach collection="menuList" item="menu" separator=" union all ">
+			SELECT #{id}, #{menu.id}
+			<if test="dbName != 'mssql'">
+				FROM dual
+			</if>
+		</foreach>
+	</insert>
+
+	<update id="delete">
+		UPDATE sys_role SET
+		del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+</mapper>

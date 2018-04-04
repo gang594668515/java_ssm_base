@@ -1,0 +1,30 @@
+@charset "UTF-8";
+
+body {
+	border: none;
+	font-size: 14px;
+}
+
+/* 去除 a 元素的下划线和虚线框 */
+a {
+	text-decoration: none;
+	outline: 0;
+}
+
+/* 去除 a 元素在悬浮、获取焦点状态的下划线  */
+a:hover, a:focus {
+	text-decoration: none;
+}
+/* 去除列表元素的项目标记 */
+ul, li, ol {
+	list-style: none;
+}
+
+/* 公共样式 */
+.g-left {
+	float: left;
+}
+
+.g-right {
+	float: right;
+}

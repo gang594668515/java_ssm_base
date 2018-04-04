@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xj.b2b.back.dao.UserDao">
+
+	<sql id="userColumns">
+		a.id,
+		a.login_name as loginName,
+		a.password,
+		a.no,
+		a.name,
+		a.email,
+		a.phone,
+		a.mobile,
+		a.user_type as userType,
+		a.photo,
+		a.position,
+		a.login_ip as loginIp,
+		a.login_date as loginDate,
+		a.login_flag as
+		loginFlag,
+		a.create_by as "createBy.id",
+		a.create_date as createDate,
+		a.update_by as "updateBy.id",
+		a.update_date as updateDate,
+		a.remarks,
+		a.del_flag as delFlag,
+		a.sex_code as sexCode,
+		a.company,
+		a.valid_code as validCode,
+		a.role_names as roleNames,
+		a.account_balance as accountBalance
+	</sql>
+
+	<sql id="tableJoins">
+	</sql>
+
+	<!-- 根据编号获得用户 -->
+	<select id="get" resultType="User">
+		SELECT
+		<include refid="userColumns" />
+		FROM sys_user a
+		<include refid="tableJoins" />
+		WHERE a.id = #{id}
+	</select>
+
+	<!-- 根据登录名查询用户 -->
+	<select id="getByLoginName" resultType="User" parameterType="User">
+		SELECT
+		<include refid="userColumns" />
+		FROM sys_user a
+		WHERE a.login_name = #{loginName}
+	</select>
+
+	<!-- 分页查询用户信息 -->
+	<select id="findList" resultType="User">
+		SELECT
+		<include refid="userColumns" />
+		FROM sys_user a
+		<include refid="tableJoins" />
+		<if test="role != null and role.id != null and role.id != ''">
+			join sys_user_role ur ON ur.user_id = a.id
+			AND ur.role_id = #{role.id}
+		</if>
+		WHERE a.del_flag = #{delFlag}
+		<if test="loginName != null and loginName != ''">
+			AND a.login_name like
+			<if test="dbName == 'oracle'">'%'||#{loginName}||'%'</if>
+			<if test="dbName == 'mssql'">'%'+#{loginName}+'%'</if>
+			<if test="dbName == 'mysql'">CONCAT('%', #{loginName}, '%')</if>
+		</if>
+		<if test="name != null and name != ''">
+			AND a.name like
+			<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+			<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+			<if test="dbName == 'mysql'">CONCAT('%', #{name}, '%')</if>
+		</if>
+		<if test="company != null and company != ''">
+			AND (a.company LIKE
+			<if test="dbName == 'oracle'">'%'||#{company}||'%')</if>
+			<if test="dbName == 'mssql'">'%'+#{company}+'%')</if>
+			<if test="dbName == 'mysql'">CONCAT('%', #{company}, '%'))</if>
+		</if>
+		<if test="searchText != null and searchText != ''">
+			and (a.name like
+			<if test="dbName == 'oracle'">'%'||#{searchText}||'%'</if>
+			<if test="dbName == 'mssql'">'%'+#{searchText}+'%'</if>
+			<if test="dbName == 'mysql'">CONCAT('%', #{searchText}, '%')</if>
+			or a.login_name like
+			<if test="dbName == 'oracle'">'%'||#{searchText}||'%'</if>
+			<if test="dbName == 'mssql'">'%'+#{searchText}+'%'</if>
+			<if test="dbName == 'mysql'">CONCAT('%', #{searchText}, '%')</if>
+			)
+		</if>
+		<!-- 如果不是超级管理员，则不显示超级管理员用户 -->
+		<if test="!currentUser.admin">
+			AND a.id != '1'
+		</if>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.name
+			</otherwise>
+		</choose>
+	</select>
+
+	<!-- 查询全部用户数目 -->
+	<select id="findAllCount" resultType="long">
+		SELECT COUNT(1)
+		FROM sys_user a
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL}
+	</select>
+
+	<!-- 插入用户 -->
+	<insert id="insert">
+		<selectKey resultType="java.lang.String" order="BEFORE" keyProperty="id">
+			select to_char(sq_sys_user_id.nextval)
+			from dual
+		</selectKey>
+		INSERT INTO sys_user(
+		id,
+		login_name,
+		password,
+		no,
+		name,
+		email,
+		phone,
+		mobile,
+		user_type,
+		photo,
+		login_flag,
+		create_by,
+		create_date,
+		update_by,
+		update_date,
+		remarks,
+		del_flag,
+		sex_code,
+		company,
+		role_names
+		) VALUES (
+		#{id},
+		#{loginName},
+		#{password},
+		#{no},
+		#{name},
+		#{email},
+		#{phone},
+		#{mobile},
+		#{USER_TYPE_BACK},
+		#{photo},
+		#{loginFlag},
+		#{createBy.id},
+		#{createDate},
+		#{updateBy.id},
+		#{updateDate},
+		#{remarks},
+		#{delFlag},
+		#{sexCode},
+		#{company},
+		#{roleNames}
+		)
+	</insert>
+
+	<!-- 插入用户注册信息 -->
+	<insert id="insertReg">
+		<selectKey resultType="java.lang.String" order="BEFORE" keyProperty="id">
+			select to_char(sq_sys_user_id.nextval)
+			from dual
+		</selectKey>
+		INSERT INTO sys_user(
+		id,
+		login_name,
+		password,
+		name,
+		email,
+		mobile,
+		user_type,
+		create_by,
+		create_date,
+		company,
+		role_names
+		)
+		VALUES (
+		#{id},
+		#{loginName},
+		#{password},
+		#{loginName},
+		#{email},
+		#{mobile},
+		#{USER_TYPE_LOGIN},
+		#{id},
+		#{createDate},
+		#{company},
+		#{roleNames}
+		)
+	</insert>
+
+	<!-- 更新角色字符串 -->
+	<update id="updateRoleNames">
+		UPDATE sys_user
+		SET
+		role_names = #{roleNames}
+		WHERE id = #{id}
+	</update>
+
+	<!-- 更新用户 -->
+	<update id="update">
+		UPDATE sys_user
+		SET
+		<if test="password != null and password != ''">
+			password = #{password},
+		</if>
+		no = #{no},
+		name = #{name},
+		email = #{email},
+		phone = #{phone},
+		mobile = #{mobile},
+		photo = #{photo},
+		login_flag =
+		#{loginFlag},
+		update_by = #{updateBy.id},
+		update_date = #{updateDate},
+		remarks = #{remarks},
+		sex_code = #{sexCode},
+		company = #{company},
+		role_names = #{roleNames}
+		WHERE id = #{id}
+	</update>
+
+	<!-- 更新用户信息 -->
+	<update id="updateUserInfo">
+		UPDATE sys_user
+		SET email = #{email},
+		no = #{no},
+		mobile = #{mobile},
+		photo = #{photo},
+		update_by =
+		#{updateBy.id},
+		update_date = #{updateDate},
+		remarks = #{remarks},
+		name = #{name},
+		position = #{position}
+		WHERE id = #{id}
+	</update>
+
+	<!-- 删除用户和角色关联表数据 -->
+	<delete id="deleteUserRole">
+		DELETE FROM sys_user_role
+		WHERE user_id = #{id}
+		<if test="role != null and role.id != null and role.id != ''">
+			and role_id = #{role.id}
+		</if>
+	</delete>
+
+	<!-- 插入用户和角色关联表数据 -->
+	<insert id="insertUserRole">
+		INSERT INTO sys_user_role(user_id, role_id)
+		<foreach collection="roleList" item="role" separator=" union all ">
+			SELECT #{id}, #{role.id}
+			<if test="dbName != 'mssql'">
+				FROM dual
+			</if>
+		</foreach>
+	</insert>
+
+	<!-- 更新用户密码 -->
+	<update id="updatePasswordById">
+		UPDATE sys_user
+		SET password = #{password}
+		WHERE id = #{id}
+	</update>
+
+	<!-- 更新登录信息，如登录IP、登录时间 -->
+	<update id="updateLoginInfo">
+		UPDATE sys_user SET
+		login_ip = #{loginIp},
+		login_Date = #{loginDate}
+		WHERE id = #{id}
+	</update>
+
+	<!-- 逻辑删除用户 -->
+	<update id="delete">
+		UPDATE sys_user
+		SET del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+
+	<!-- 从回收站恢复用户 -->
+	<update id="revertUser">
+		UPDATE sys_user
+		SET del_flag = #{DEL_FLAG_NORMAL}
+		WHERE id = #{id}
+	</update>
+
+	<!-- 更新用户找回密码时的验证码 -->
+	<update id="updateValidCode">
+		UPDATE sys_user
+		SET valid_code = #{validCode}
+		WHERE login_name = #{loginName}
+	</update>
+
+	<!-- 重置用户密码 -->
+	<update id="resetUserPwd">
+		UPDATE sys_user
+		SET password = #{password},
+		valid_code = null
+		WHERE login_name = #{loginName} AND
+		valid_code = #{validCode}
+	</update>
+
+</mapper>

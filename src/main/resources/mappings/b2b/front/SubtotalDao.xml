@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xj.b2b.front.dao.SubtotalDao">
+
+	<!-- 后台统计信息 -->
+	<select id="backStatistics" statementType="CALLABLE" parameterType="java.util.Map">
+		{call
+		p_statistic_back(
+		#{type0,mode=IN,jdbcType=VARCHAR},
+		#{val1,mode=OUT,jdbcType=NUMERIC},
+		#{val2,mode=OUT,jdbcType=NUMERIC},
+		#{val3,mode=OUT,jdbcType=NUMERIC},
+		#{val4,mode=OUT,jdbcType=NUMERIC},
+		#{val5,mode=OUT,jdbcType=NUMERIC},
+		#{val6,mode=OUT,jdbcType=NUMERIC},
+		#{val7,mode=OUT,jdbcType=NUMERIC},
+		#{val8,mode=OUT,jdbcType=NUMERIC},
+		#{val9,mode=OUT,jdbcType=NUMERIC})}
+	</select>
+	
+</mapper>

@@ -1,0 +1,12 @@
+.pagination>.controls>a {
+	border: medium none !important;
+	margin-left: 1px;
+}
+
+.pagination>.controls>a>input {
+	border: none;
+	color: #999 !important;
+	padding: 0;
+	text-align: center;
+	width: 30px !important;
+}

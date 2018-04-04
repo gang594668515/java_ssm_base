@@ -1,0 +1,24 @@
+header {
+	background-color: #222222;
+	height: 2em;
+	line-height: 2em;
+	color: #fff;
+}
+
+.header-div>.header-left a {
+	color: #fe7e11;
+}
+
+.header-div>.header-right a {
+	color: #ffffff;
+}
+
+.header-div>.header-right b {
+	margin: 0 0.2em;
+}
+
+.header-div>.header-right .header-msg-count {
+	color: #fd7322;
+	font-weight: bold;
+	padding: 0 0.1em;
+}

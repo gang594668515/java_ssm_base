@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xj.b2b.back.dao.UserMessageDao">
+
+	<sql id="tableColumns">
+		a.id,
+		a.title,
+		a.content,
+		a.href,
+		a.type,
+		a.send_by AS "sendBy.id",
+		a.send_date AS sendDate,
+		a.receive_by AS "receiveBy.id",
+		a.receive_date AS receiveDate,
+		a.read_flag AS readFlag
+	</sql>
+	
+	<sql id="tableJoins">
+		LEFT JOIN sys_user s ON s.id = a.send_by 
+		LEFT JOIN sys_user r ON r.id = a.receive_by 
+	</sql>
+	
+	<select id="get" resultType="UserMessage">
+		SELECT 
+		<include refid="tableColumns"/>
+		FROM user_message a  
+		<include refid="tableJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="UserMessage">
+		SELECT 
+		<include refid="tableColumns" />
+		FROM user_message a 
+		<include refid="tableJoins"/> 
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL} 
+		<if test="sendBy != null and sendBy.id != null and sendBy.id != ''">
+			AND a.send_by = #{sendBy.id}  
+		</if>
+		<if test="receiveBy != null and receiveBy.id != null and receiveBy.id != ''">
+			AND a.receive_by = #{receiveBy.id}  
+		</if>
+		<if test="type != null and type != ''">
+			AND a.type = #{type}  
+		</if>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.read_flag, a.send_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO user_message (
+		<selectKey resultType="java.lang.String" order="BEFORE" keyProperty="id">
+			select to_char(sq_user_message_id.nextval)
+			from dual
+		</selectKey>
+		id,
+		title,
+		content,
+		href,
+		type,
+		send_by,
+		send_date,
+		receive_by
+		) VALUES (
+		#{id},
+		#{title},
+		#{content},
+		#{href},
+		#{type},
+		#{createBy.id},
+		#{createDate},
+		#{receiveBy.id}
+		)
+	</insert>
+	
+	<update id="updateReadFlag">
+		UPDATE user_message SET 
+		read_flag = #{READ_FLAG_YES},
+		receive_date = #{updateDate} 
+		WHERE id = #{id} 
+	</update>
+	
+	<update id="delete">
+		UPDATE user_message SET 
+		del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+	<select id="getNewMessageCount" resultType="Integer">
+		SELECT COUNT(1) 
+		FROM user_message a 
+		WHERE a.del_flag = #{DEL_FLAG_NORMAL} 
+		AND a.read_flag = #{READ_FLAG_NO} 
+		AND a.receive_by = #{receiveBy.id} 
+	</select>
+
+</mapper>
